@@ -1,0 +1,28 @@
+{
+  "name": "agent-threads-vscode",
+  "displayName": "Agent Threads",
+  "description": "VS Code extension to interact with Azure Foundry agent threads (generator/verifier/selector).",
+  "version": "0.0.1",
+  "engines": { "vscode": "^1.80.0" },
+  "activationEvents": ["onCommand:agentThreads.runAgent"],
+  "main": "./out/extension.js",
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "tsc -p ./",
+    "watch": "tsc -w -p ./"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "agentThreads.runAgent",
+        "title": "Agent Threads: Run Agent"
+      }
+    ]
+  },
+  "devDependencies": {
+    "typescript": "~5.0.0",
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.80.0",
+    "vscode": "^1.1.37"
+  }
+}
