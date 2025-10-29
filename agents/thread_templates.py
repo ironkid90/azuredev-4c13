@@ -60,8 +60,15 @@ def create_client(endpoint: Optional[str] = None) -> AIProjectClient:
             endpoint = None
 
     if api_key:
-        cred = AzureKeyCredential(api_key)
-        return AIProjectClient(credential=cred, endpoint=endpoint)
+        try:
+            cred = AzureKeyCredential(api_key)
+            return AIProjectClient(credential=cred, endpoint=endpoint)
+        except Exception as exc:
+            # Some service clients expect a TokenCredential (get_token) and
+            # will fail when given AzureKeyCredential. Fall back to
+            # DefaultAzureCredential and warn the user.
+            print("Warning: API key auth failed for AIProjectClient, falling back to DefaultAzureCredential:", exc)
+            return AIProjectClient(credential=DefaultAzureCredential(), endpoint=endpoint)
 
     return AIProjectClient(credential=DefaultAzureCredential(), endpoint=endpoint)
 
