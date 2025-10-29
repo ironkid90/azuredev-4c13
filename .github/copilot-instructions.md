@@ -54,4 +54,13 @@ Files worth reading next
 - `agents/run_agent.py`, `agents/generate_ensemble.py`, `agents/selector.py`, `agents/verifier.py`, `agents/config.py` — primary agent logic.
 - `extension/` — contains a small extension scaffold (package.json, tsconfig.json) if you plan to add a UI.
 
+New helpers
+- `agents/thread_templates.py` — helper templates and utilities to create and run threads. Use `init_thread()` and `run_agent_once()` to standardize system->user ordering and polling.
+- `agents/cli.py` — lightweight CLI wrapper to create a thread from a named template and run it; useful for local, repeatable tests and CI.
+
+Testing
+- Unit tests use the standard library `unittest`. Run them with:
+  - `python -m unittest discover -v`
+- Tests intentionally mock `agents.thread_templates.create_client` to avoid network calls. See `tests/test_cli.py` for patterns to mock `init_thread`, `run_agent_once`, and `collect_messages`.
+
 If anything in these instructions is unclear or missing, tell me which part to expand or a specific workflow to document.
