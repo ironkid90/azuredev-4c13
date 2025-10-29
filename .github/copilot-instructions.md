@@ -16,12 +16,24 @@ Key components and patterns (read these files)
 - `agents/generate_ensemble.py` — runs multiple generator variants in parallel (ThreadPoolExecutor). Variants are implemented by injecting different `system` messages before the user prompt. The reranker presently prefers succeeded runs and the longest textual reply.
 - `agents/selector.py` — rule-based selector that decides whether to call the generator. Uses `compress_context()` and `should_generate()` heuristics. Replace with a selector agent if needed.
 - `agents/verifier.py` — deterministic verifier for candidate responses. Looks for secrets, expects unified diff patches when returning `patch` fields, and can optionally call linters (flake8). Returns `{"verdict": "PASS"|"FAIL", "issues": [...], "confidence": n}`.
+ - `agents/thread_templates.py` — helper templates and utilities to create and run threads. Use `init_thread()` and `run_agent_once()` to standardize system->user ordering and polling.
+ - `agents/cli.py` — small CLI wrapper that runs named templates (generator/selector/verifier) and prints collected messages. Use it for quick local activation: `python -m agents.cli generator "Fix foo"`.
 
 Message and thread conventions
 - Threads are created via `project.agents.threads.create()` and identified by `thread.id`.
 - Send `system` messages first to set behavior, then `user` messages. Many scripts rely on that ordering (see `generate_ensemble._single_variant`).
 - Read messages using `project.agents.messages.list(thread_id=..., order=ListSortOrder.ASCENDING)` and access textual content with `m.text_messages[-1].text.value`.
 - Create a run with `project.agents.runs.create_and_process(thread_id=..., agent_id=...)` and poll `run.status` until `succeeded` or `failed`.
+
+CLI and quick activation
+- A small CLI is provided at `agents/cli.py`. Example (PowerShell):
+
+```powershell
+python -m agents.cli generator "Fix failing test X"
+python -m agents.cli verifier "Verify candidate patch"
+```
+
+The CLI uses `agents/thread_templates.py` under the hood to ensure templates and message ordering are correct.
 
 Ensemble / orchestration notes
 - The ensemble pattern here: multiple variants (different system prompts) -> run in parallel -> rerank. This file is the simplest place to change orchestration logic or replace the reranker with the `verifier`.
@@ -34,6 +46,7 @@ Developer workflows & useful commands (Windows / PowerShell)
 - Install dependencies: `pip install -r requirements.txt`
 - Run a one-off prompt: `python agents/run_agent.py "Fix test foo"`
 - Generate an ensemble: `python agents/generate_ensemble.py "Fix test foo" --workers 3`
+- Run unit tests (unittest): `python -m unittest discover -v`
 - If you need to configure credentials in PowerShell for `DefaultAzureCredential` using a service principal:
   - $env:AZURE_CLIENT_ID = '...'
   - $env:AZURE_TENANT_ID = '...'
