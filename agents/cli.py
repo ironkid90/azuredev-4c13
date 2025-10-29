@@ -16,8 +16,25 @@ def main(argv: List[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="agents-cli")
     parser.add_argument("role", choices=("generator", "selector", "verifier"), help="Which thread template to run")
     parser.add_argument("prompt", nargs="?", default=None, help="Optional user prompt to send")
+    parser.add_argument("--dry-run", dest="dry_run", action="store_true", help="Simulate thread creation and run locally without calling Azure")
     args = parser.parse_args(argv)
 
+    if args.dry_run:
+        # Simulate a run without contacting Azure. Useful for testing and CI.
+        thread_id = "dry-thread-1"
+        print(f"[dry-run] Created thread, ID: {thread_id}")
+        # Simulated run result
+        run_status = "succeeded"
+        if run_status == "failed":
+            print("[dry-run] Run failed: simulated error")
+            return 2
+
+        messages = [{"role": "assistant", "text": "<simulated reply>"}]
+        for m in messages:
+            print(f"{m['role']}: {m['text']}")
+        return 0
+
+    # Real run (calls into thread_templates which uses Azure SDK)
     project = create_client()
     thread = init_thread(project, args.role, user_prompt=args.prompt)
     run = run_agent_once(project, thread.id, AGENT_ID)
