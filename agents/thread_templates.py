@@ -15,8 +15,10 @@ from __future__ import annotations
 import time
 from typing import Optional
 
+import os
 from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential
+from azure.core.credentials import AzureKeyCredential
 from azure.ai.agents.models import ListSortOrder
 
 
@@ -37,14 +39,31 @@ DEFAULT_TEMPLATES = {
 
 
 def create_client(endpoint: Optional[str] = None) -> AIProjectClient:
-    """Create an AIProjectClient using DefaultAzureCredential.
+    """Create an AIProjectClient.
+
+    Behavior:
+    - If environment variable `AZURE_API_KEY` is present, use it with
+      `AzureKeyCredential` (suitable for API-key based Foundry endpoints).
+    - Otherwise, fall back to `DefaultAzureCredential()` (managed identity / CLI auth).
 
     If `endpoint` is not provided callers may pass a project-specific endpoint
     from `agents.config.ENDPOINT`.
     """
-    if endpoint:
-        return AIProjectClient(credential=DefaultAzureCredential(), endpoint=endpoint)
-    return AIProjectClient(credential=DefaultAzureCredential())
+    api_key = os.environ.get("AZURE_API_KEY")
+    if endpoint is None:
+        # allow callers to import agents.config and pass its ENDPOINT
+        try:
+            from agents.config import ENDPOINT as CONFIG_ENDPOINT  # type: ignore
+
+            endpoint = CONFIG_ENDPOINT
+        except Exception:
+            endpoint = None
+
+    if api_key:
+        cred = AzureKeyCredential(api_key)
+        return AIProjectClient(credential=cred, endpoint=endpoint)
+
+    return AIProjectClient(credential=DefaultAzureCredential(), endpoint=endpoint)
 
 
 def get_system_template(name: str) -> str:
