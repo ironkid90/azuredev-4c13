@@ -17,7 +17,7 @@ from typing import Optional
 
 import os
 from azure.ai.projects import AIProjectClient
-from azure.identity import DefaultAzureCredential
+from azure.identity import DefaultAzureCredential, ClientSecretCredential
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.agents.models import ListSortOrder
 
@@ -38,7 +38,7 @@ DEFAULT_TEMPLATES = {
 }
 
 
-def create_client(endpoint: Optional[str] = None) -> AIProjectClient:
+def create_client(endpoint: Optional[str] = None, client_id: Optional[str] = None, tenant_id: Optional[str] = None, client_secret: Optional[str] = None) -> AIProjectClient:
     """Create an AIProjectClient.
 
     Behavior:
@@ -58,6 +58,11 @@ def create_client(endpoint: Optional[str] = None) -> AIProjectClient:
             endpoint = CONFIG_ENDPOINT
         except Exception:
             endpoint = None
+
+    # If explicit client credentials supplied prefer ClientSecretCredential
+    if client_id and tenant_id and client_secret:
+        cred = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
+        return AIProjectClient(credential=cred, endpoint=endpoint)
 
     if api_key:
         try:
